@@ -1,0 +1,183 @@
+// src/context/ChatContext.tsx
+
+'use client';
+
+import { supabase } from '@/lib/supabase/client';
+import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import { useAuth } from './AuthContext';
+
+// --- TYPES ---
+interface ChatMessage {
+  role: 'user' | 'model';
+  content: string;
+}
+
+interface Conversation {
+  id: string; 
+  title: string;
+  user_id: string;
+  history: ChatMessage[];
+  updated_at: string; 
+}
+
+interface ChatContextProps {
+  conversations: Conversation[];
+  activeConversation: Conversation | null; 
+  loadingConversations: boolean;
+
+  startNewConversation: () => Promise<void>;
+  switchConversation: (conversationId: string) => Promise<void>;
+  updateConversationHistory: (newHistory: ChatMessage[]) => Promise<void>; 
+}
+
+// --- CONTEXT AND HOOK ---
+const ChatContext = createContext<ChatContextProps | undefined>(undefined);
+
+export const useChat = () => {
+  const context = useContext(ChatContext);
+  if (context === undefined) {
+    throw new Error('useChat must be used within a ChatProvider');
+  }
+  return context;
+};
+
+// --- PROVIDER ---
+export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const { user, loading: authLoading } = useAuth();
+  const [conversations, setConversations] = useState<Conversation[]>([]);
+  const [activeConversation, setActiveConversation] = useState<Conversation | null>(null);
+  const [loadingConversations, setLoadingConversations] = useState(true);
+
+  // 1. LOADS ALL CONVERSATIONS FOR THE AUTHENTICATED USER
+  const loadConversations = useCallback(async () => {
+    if (!user) return;
+    setLoadingConversations(true);
+
+    const { data, error } = await supabase
+      .from('conversations')
+      .select('*')
+      .eq('user_id', user.id)
+      .order('updated_at', { ascending: false }); // Sorted by last update
+
+    if (error) {
+      console.error('[DB ERROR] Error loading conversations:', error);
+      setLoadingConversations(false);
+      return;
+    }
+
+    setConversations(data as Conversation[]);
+    setLoadingConversations(false);
+
+    if (data.length > 0) {
+      setActiveConversation({...data[0]} as Conversation);
+    } else {
+      // Start a new chat if none exist
+      await startNewConversation(); 
+    }
+  }, [user]);
+
+  useEffect(() => {
+    if (!authLoading && user) {
+      loadConversations();
+    }
+  }, [user, authLoading, loadConversations]);
+
+
+  // 2. LOGIC TO START A NEW CONVERSATION
+  const startNewConversation = async () => {
+    if (!user) {
+        console.error("Cannot create conversation: user is not logged in.");
+        return;
+    }
+    setLoadingConversations(true);
+
+    const newConvData = {
+      user_id: user.id,
+      title: 'New chat', 
+      history: [], 
+    };
+
+    const { data, error } = await supabase
+      .from('conversations')
+      .insert(newConvData)
+      .select()
+      .single();
+
+    if (error || !data) {
+      console.error('[DB ERROR] Failed to INSERT new conversation:', error);
+      setLoadingConversations(false);
+      return;
+    }
+    
+    const newConv = data as Conversation;
+    setConversations(prev => [newConv, ...prev]);
+    setActiveConversation(newConv); 
+    setLoadingConversations(false);
+  };
+
+  // 3. LOGIC TO SWITCH ACTIVE CONVERSATION
+  const switchConversation = async (conversationId: string) => {
+    if (activeConversation?.id === conversationId) return;
+    
+    const nextConv = conversations.find(c => c.id === conversationId);
+    if (nextConv) {
+      setActiveConversation({...nextConv}); 
+    }
+  };
+
+  // 4. LOGIC TO UPDATE HISTORY
+  const updateConversationHistory = async (newHistory: ChatMessage[]) => {
+    if (!user || !activeConversation) {
+        console.error('[DB ERROR] Cannot update: no user or no active conversation.');
+        return;
+    }
+    
+    // Logic to update title after the first user message
+    let newTitle = activeConversation.title;
+    if (activeConversation.title === 'New chat' && newHistory.length > 1) {
+        const firstUserMsg = newHistory.find(msg => msg.role === 'user');
+        if (firstUserMsg) {
+            newTitle = firstUserMsg.content.substring(0, 30) + (firstUserMsg.content.length > 30 ? '...' : '');
+        }
+    }
+
+    // DB UPDATE operation
+    const { data, error } = await supabase
+      .from('conversations')
+      .update({ 
+          history: newHistory,
+          title: newTitle,
+          updated_at: new Date().toISOString(),
+      })
+      .eq('id', activeConversation.id)
+      .select()
+      .single();
+
+    if (error || !data) {
+      // CRITICAL LOG for RLS issues
+      console.error(`[DB ERROR] ❌ Failed to UPDATE history for ID ${activeConversation.id}:`, error);
+      return;
+    }
+    
+    const updatedConv = data as Conversation;
+    setActiveConversation(updatedConv); 
+    
+    // Update the list (for sidebar sorting)
+    setConversations(prev => 
+        prev.map(c => (c.id === updatedConv.id ? updatedConv : c))
+            .sort((a, b) => new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime()) 
+    );
+  };
+
+
+  const value = {
+    conversations,
+    activeConversation,
+    loadingConversations,
+    startNewConversation,
+    switchConversation,
+    updateConversationHistory,
+  };
+
+  return <ChatContext.Provider value={value}>{children}</ChatContext.Provider>;
+};

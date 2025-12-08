@@ -18,20 +18,15 @@ export default function LoginPage() {
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Redirection i user already connected
+  // Redirection if user already connected
   useEffect(() => {
     if (!loading && user) {
       router.push('/');
     }
   }, [loading, user, router]);
 
-  if (loading) {
+  if (loading || user) {
     return <LoadingSpinner />;
-  }
-  
-  // Si déjà connecté, on n'affiche rien ou un spinner temporaire
-  if (user) {
-    return <LoadingSpinner />; 
   }
 
   const handleSubmit = async (e: FormEvent) => {
@@ -41,6 +36,7 @@ export default function LoginPage() {
 
     let authPromise;
 
+    // Sign up or login
     if (isSignUp) {
       authPromise = supabase.auth.signUp({ email, password });
     } else {

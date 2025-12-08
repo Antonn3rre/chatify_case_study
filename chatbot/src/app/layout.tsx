@@ -1,11 +1,12 @@
-// src/app/layout.tsx (MIS À JOUR)
+// src/app/layout.tsx
 
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
-import { AuthProvider } from "@/context/AuthContext"; // Importation de l'AuthProvider
-import Sidebar from "@/components/Sidebar"; // Nous allons créer ce composant ensuite
+import { AuthProvider } from "@/context/AuthContext";
+import Sidebar from "@/components/Sidebar";
 import React from 'react';
+import { ChatProvider } from "@/context/ChatContext";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -23,6 +24,7 @@ export default function RootLayout({
     <html lang="fr">
       <body className={`${inter.className} bg-gray-50`}>
         <AuthProvider>
+          <ChatProvider>
           <div className="h-screen w-screen flex">
             <Sidebar />
 
@@ -31,6 +33,7 @@ export default function RootLayout({
             </main>
 
           </div>
+          </ChatProvider>
         </AuthProvider>
       </body>
     </html>
