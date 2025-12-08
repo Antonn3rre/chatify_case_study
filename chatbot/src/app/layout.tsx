@@ -4,10 +4,13 @@
 
 import React, { useState } from 'react';
 import { Inter } from "next/font/google";
+import { usePathname } from 'next/navigation';
 import "./globals.css";
 import { AuthProvider } from "@/context/AuthContext";
 import { ChatProvider } from "@/context/ChatContext";
 import MobileHeader from "@/components/MobileHeader";
+import LoginHeader from "@/components/LoginHeader";
+
 import Sidebar from "@/components/Sidebar";
 
 // Load Inter font
@@ -21,6 +24,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const pathname = usePathname();
+  const isLoginPage = pathname === '/login';
 
   return (
     <html lang="fr">
@@ -38,17 +43,14 @@ export default function RootLayout({
               
               {/* MAIN DIV */}
               <main className="flex-1 flex flex-col">
-                
-                {/* MobileHeader : button for sidebar */}
-                <MobileHeader 
-                    setIsSidebarOpen={setIsSidebarOpen} 
-                />
+                {isLoginPage ? ( <LoginHeader /> ) : 
+                  (<MobileHeader setIsSidebarOpen={setIsSidebarOpen} />)}
                 
                 {children}
               </main>
 
               {/* Overlay Mobile (Hide screen when sidebar is open) */}
-              {isSidebarOpen && (
+              {isSidebarOpen && !isLoginPage && (
                 <div 
                   onClick={() => setIsSidebarOpen(false)} 
                 />
