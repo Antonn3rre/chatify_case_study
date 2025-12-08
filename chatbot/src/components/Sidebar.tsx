@@ -20,7 +20,8 @@ const Sidebar = () => {
         loadingConversations,
         conversations,
         activeConversation,
-        switchConversation
+        switchConversation,
+        resetGuestSession
     } = useChat();
 
     const handleLogin = () => {
@@ -29,6 +30,7 @@ const Sidebar = () => {
     
     const handleLogout = async () => {
         await supabase.auth.signOut();
+        resetGuestSession();
     };
 
     // Do not show sidebar on the login page

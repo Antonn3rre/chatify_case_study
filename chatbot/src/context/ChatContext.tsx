@@ -44,12 +44,32 @@ export const useChat = () => {
 // --- PROVIDER ---
 export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { user, loading: authLoading } = useAuth();
+  
+  const [localHistory, setLocalHistory] = useState<ChatMessage[]>([]);
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [activeConversation, setActiveConversation] = useState<Conversation | null>(null);
   const [loadingConversations, setLoadingConversations] = useState(true);
 
+  const isGuestMode = !user && !authLoading;
+
   // 1. LOADS ALL CONVERSATIONS FOR THE AUTHENTICATED USER
   const loadConversations = useCallback(async () => {
+    
+    if (isGuestMode) {
+      const guestConv: Conversation = {
+        id: 'guest-session',
+        title: 'Guest chat (Not saved)',
+        user_id: 'guest',
+        history: localHistory,
+        updated_at: new Date().toISOString(),
+      };
+      setConversations([guestConv]);
+      setActiveConversation(guestConv);
+      setLoadingConversations(false);
+      return;
+    }
+    
+    
     if (!user) return;
     setLoadingConversations(true);
 
@@ -74,17 +94,23 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
       // Start a new chat if none exist
       await startNewConversation(); 
     }
-  }, [user]);
+  }, [user, authLoading, localHistory]);
 
   useEffect(() => {
-    if (!authLoading && user) {
+    if (!authLoading) {
       loadConversations();
     }
-  }, [user, authLoading, loadConversations]);
+  }, [authLoading, loadConversations]);
 
 
   // 2. LOGIC TO START A NEW CONVERSATION
   const startNewConversation = async () => {
+
+    if (isGuestMode) {
+      setLocalHistory([]);
+      return;
+    }
+
     if (!user) {
         console.error("Cannot create conversation: user is not logged in.");
         return;
@@ -127,6 +153,19 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   // 4. LOGIC TO UPDATE HISTORY
   const updateConversationHistory = async (newHistory: ChatMessage[]) => {
+    
+    if (isGuestMode) {
+      setLocalHistory(newHistory);
+      setActiveConversation(prev => {
+        if (!prev) return null;
+        return {
+          ...prev,
+          history: newHistory
+        };
+      });
+      return;
+    }
+    
     if (!user || !activeConversation) {
         console.error('[DB ERROR] Cannot update: no user or no active conversation.');
         return;
@@ -169,6 +208,9 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
     );
   };
 
+  const resetGuestSession = () => {
+    setLocalHistory([]);
+  };
 
   const value = {
     conversations,
@@ -177,6 +219,7 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
     startNewConversation,
     switchConversation,
     updateConversationHistory,
+    resetGuestSession,
   };
 
   return <ChatContext.Provider value={value}>{children}</ChatContext.Provider>;
