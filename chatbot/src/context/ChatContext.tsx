@@ -28,6 +28,7 @@ interface ChatContextProps {
   startNewConversation: () => Promise<void>;
   switchConversation: (conversationId: string) => Promise<void>;
   updateConversationHistory: (newHistory: ChatMessage[]) => Promise<void>; 
+  resetGuestSession: () => void;
 }
 
 // --- CONTEXT AND HOOK ---
