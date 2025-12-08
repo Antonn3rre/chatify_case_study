@@ -2,7 +2,7 @@
 import { NextResponse } from "next/server";
 import { GoogleGenAI } from "@google/genai";
 
-
+// Exec on Edge Runtime
 export const runtime = "edge";
 
 export async function POST(req: Request) {
@@ -10,14 +10,11 @@ export async function POST(req: Request) {
 
     const { messages } = await req.json();
 
-    // console.log("Messages recus cote backend :", messages);
-
     // Init IA Client with API key
     const ai = new GoogleGenAI({ apiKey: process.env.GOOGLE_GENERATIVE_AI_API_KEY!});
 
     // Create a prompt (string) with all messages
     const prompt = messages.map((m: any) => `${m.role}: ${m.content}`).join("\n");
-    // console.log("Prompt :", prompt);
 
     // Streaming call
     const result = await ai.models.generateContentStream({
@@ -29,11 +26,9 @@ export async function POST(req: Request) {
     const stream = new ReadableStream({
       async start(controller) {
         for await (const chunk of result) {
-          // console.log("Chunk recu :", chunk);
-
           const text = chunk.text;
-          
           if (text) {
+            // Convert string to UTF-8 to send as a stream
             controller.enqueue(new TextEncoder().encode(text));
           }
         }
@@ -41,6 +36,7 @@ export async function POST(req: Request) {
       }
     });
 
+    // Return the stream version of the LLM response
     return new Response(stream, {
       headers: { "Content-Type": "text/plain; charset=utf-8" }
     });

@@ -10,6 +10,8 @@ import { LogIn, UserPlus, Loader } from 'lucide-react';
 import LoadingSpinner from '@/components/LoadingSpinner';
 
 export default function LoginPage() {
+
+  // Retrieve necessary tools and infos 
   const { user, loading } = useAuth();
   const router = useRouter();
   const [email, setEmail] = useState('');
@@ -111,11 +113,7 @@ export default function LoginPage() {
             ) : (
               <LogIn className="w-5 h-5 mr-2" />
             )}
-            {isSubmitting
-              ? 'Loading...'
-              : isSignUp
-              ? 'Sign up'
-              : 'Login'}
+            {isSubmitting ? 'Loading...' : isSignUp ? 'Sign up' : 'Login'}
           </button>
         </form>
         <div className="mt-6 text-center">

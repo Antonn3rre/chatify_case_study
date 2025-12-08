@@ -55,7 +55,7 @@ const ChatInterface = () => {
     e.preventDefault();
     if (!input.trim() || isLoading) return;
 
-    // If no conversation is active, start a new one first.
+    // If no conversation is active, start a new one first
     if (!activeConversation) {
         await startNewConversation();
         return; 
@@ -83,6 +83,7 @@ const ChatInterface = () => {
       const startTime = Date.now();
       let totalTokens = 0;
 
+      // Call to /api/chat with query (and history)
       const response = await fetch("/api/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -100,6 +101,7 @@ const ChatInterface = () => {
         const { value, done } = await reader.read();
         if (done) break;
 
+        // Decode stream content (UTF-8) to text
         const chunkText = new TextDecoder().decode(value, { stream: true }); 
         
         // Loop char by char
@@ -124,7 +126,7 @@ const ChatInterface = () => {
         setTokensPerSecond(tps);
       }
       
-      // Final save (ensures title update)
+      // Final save
       const finalTime = (Date.now() - startTime) / 1000;
       setTokensPerSecond(totalTokens / finalTime);
       
@@ -226,7 +228,7 @@ const ChatInterface = () => {
       <div className="flex-shrink-0 bg-white p-4 border-t border-gray-200 shadow-lg">
         {tokensPerSecond !== null && (
           <div className="text-xs text-right mb-1 text-gray-500">
-            Performance: **{tokensPerSecond.toFixed(2)} tokens/s**
+            Performance: {tokensPerSecond.toFixed(2)} tokens/s
           </div>
         )}
         <form onSubmit={sendMessage} className="flex space-x-3">
@@ -236,13 +238,9 @@ const ChatInterface = () => {
             value={input}
             onChange={(e) => {setInput(e.target.value); autoResizeTextarea(e.target);}}
             disabled={isLoading || !activeConversation}
-            placeholder={
-              !activeConversation
-              ? "Let's create a new discussion" 
-              : isLoading 
-                ? "Waiting for the answer..." 
-                : "Your text..."
-            }
+            placeholder={ !activeConversation ? "Let's create a new discussion"
+                          : isLoading ? "Waiting for the answer..." 
+                          : "Your text..." }
             rows={1}
             className="flex-1 p-3 input-area resize-none max-h-24 overflow-y-auto"
           />

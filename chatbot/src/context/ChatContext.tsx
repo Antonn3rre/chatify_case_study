@@ -6,7 +6,7 @@ import { supabase } from '@/lib/supabase/client';
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { useAuth } from './AuthContext';
 
-// --- TYPES ---
+// TYPES
 interface ChatMessage {
   role: 'user' | 'model';
   content: string;
@@ -31,7 +31,7 @@ interface ChatContextProps {
   resetGuestSession: () => void;
 }
 
-// --- CONTEXT AND HOOK ---
+// CONTEXT AND HOOK
 const ChatContext = createContext<ChatContextProps | undefined>(undefined);
 
 export const useChat = () => {
@@ -42,7 +42,7 @@ export const useChat = () => {
   return context;
 };
 
-// --- PROVIDER ---
+// PROVIDER
 export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { user, loading: authLoading } = useAuth();
   
@@ -53,9 +53,10 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const isGuestMode = !user && !authLoading;
 
-  // 1. LOADS ALL CONVERSATIONS FOR THE AUTHENTICATED USER
+  // Loads all conversation for the authenticated user
   const loadConversations = useCallback(async () => {
     
+    // If guest mode -> load conversation from the actual chat
     if (isGuestMode) {
       const guestConv: Conversation = {
         id: 'guest-session',
@@ -70,10 +71,10 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
       return;
     }
     
-    
     if (!user) return;
     setLoadingConversations(true);
 
+    // If logged in -> load conversations from DB
     const { data, error } = await supabase
       .from('conversations')
       .select('*')
@@ -89,6 +90,7 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setConversations(data as Conversation[]);
     setLoadingConversations(false);
 
+    // If old conversations exist, select last one as active
     if (data.length > 0) {
       setActiveConversation({...data[0]} as Conversation);
     } else {
@@ -104,9 +106,10 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, [authLoading, loadConversations]);
 
 
-  // 2. LOGIC TO START A NEW CONVERSATION
+  // LOGIC TO START A NEW CONVERSATION
   const startNewConversation = async () => {
 
+    // For guest -> empty the local history
     if (isGuestMode) {
       setLocalHistory([]);
       return;
@@ -124,6 +127,7 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
       history: [], 
     };
 
+    // Insert new chat into DB (still empty)
     const { data, error } = await supabase
       .from('conversations')
       .insert(newConvData)
@@ -142,17 +146,19 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setLoadingConversations(false);
   };
 
-  // 3. LOGIC TO SWITCH ACTIVE CONVERSATION
+  // LOGIC TO SWITCH ACTIVE CONVERSATION
   const switchConversation = async (conversationId: string) => {
+    // If click on already active conversation
     if (activeConversation?.id === conversationId) return;
     
+    // Find conversation ID in list
     const nextConv = conversations.find(c => c.id === conversationId);
     if (nextConv) {
       setActiveConversation({...nextConv}); 
     }
   };
 
-  // 4. LOGIC TO UPDATE HISTORY
+  // LOGIC TO UPDATE HISTORY
   const updateConversationHistory = async (newHistory: ChatMessage[]) => {
     
     if (isGuestMode) {
@@ -176,6 +182,7 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
     let newTitle = activeConversation.title;
     if (activeConversation.title === 'New chat' && newHistory.length > 1) {
         const firstUserMsg = newHistory.find(msg => msg.role === 'user');
+        // Use 30 first chars of 1st msg to have a title
         if (firstUserMsg) {
             newTitle = firstUserMsg.content.substring(0, 30) + (firstUserMsg.content.length > 30 ? '...' : '');
         }
@@ -194,11 +201,11 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
       .single();
 
     if (error || !data) {
-      // CRITICAL LOG for RLS issues
-      console.error(`[DB ERROR] ❌ Failed to UPDATE history for ID ${activeConversation.id}:`, error);
+      console.error(`[DB ERROR] Failed to UPDATE history for ID ${activeConversation.id}:`, error);
       return;
     }
     
+    // Update conversation locally
     const updatedConv = data as Conversation;
     setActiveConversation(updatedConv); 
     

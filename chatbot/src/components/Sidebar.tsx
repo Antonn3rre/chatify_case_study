@@ -32,7 +32,9 @@ const Sidebar = ({ isMobileOpen, setIsMobileOpen }: { isMobileOpen: boolean, set
     }
     
     const handleLogout = async () => {
+        // Call to supabase
         await supabase.auth.signOut();
+        // To avoid getting back on old guest chat
         resetGuestSession();
         setIsMobileOpen(false); 
     };
@@ -126,7 +128,7 @@ const Sidebar = ({ isMobileOpen, setIsMobileOpen }: { isMobileOpen: boolean, set
                 
                 {isGuestMode ? (
                     <div className="p-3 text-sm rounded-lg bg-indigo-50 text-indigo-700">
-                        {activeConversation?.title || 'Nouvelle discussion'}
+                        {activeConversation?.title || 'New Chat'}
                     </div>
                 ) : (
                     // Logic for displaying saved conversations (Authenticated Mode)
@@ -165,7 +167,7 @@ const Sidebar = ({ isMobileOpen, setIsMobileOpen }: { isMobileOpen: boolean, set
 
             {/* Footer */}
             <div className="p-4 border-t text-sm text-gray-500 flex-shrink-0">
-                <p>© {new Date().getFullYear()} Gemini Chat</p>
+                <p>© {new Date().getFullYear()} Chatify Case Study</p>
             </div>
         </aside>
     );

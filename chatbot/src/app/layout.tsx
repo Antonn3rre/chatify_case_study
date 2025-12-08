@@ -10,8 +10,11 @@ import { ChatProvider } from "@/context/ChatContext";
 import MobileHeader from "@/components/MobileHeader";
 import Sidebar from "@/components/Sidebar";
 
+// Load Inter font
 const inter = Inter({ subsets: ["latin"] });
 
+// Context providers wrapping every other div to avoid
+// manually sending the informations to each one
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -36,7 +39,7 @@ export default function RootLayout({
               {/* MAIN DIV */}
               <main className="flex-1 flex flex-col">
                 
-                {/* 3. MobileHeader : button for sidebar */}
+                {/* MobileHeader : button for sidebar */}
                 <MobileHeader 
                     setIsSidebarOpen={setIsSidebarOpen} 
                 />
@@ -44,7 +47,7 @@ export default function RootLayout({
                 {children}
               </main>
 
-              {/* 4. Overlay Mobile (Hide screen when sidebar is open) */}
+              {/* Overlay Mobile (Hide screen when sidebar is open) */}
               {isSidebarOpen && (
                 <div 
                   onClick={() => setIsSidebarOpen(false)} 
