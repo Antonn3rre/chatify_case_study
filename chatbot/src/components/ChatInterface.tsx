@@ -20,6 +20,7 @@ const ChatInterface = () => {
     loadingConversations
   } = useChat(); 
   
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
   const messages = activeConversation?.history || []; 
 
   const [input, setInput] = useState('');
@@ -32,6 +33,23 @@ const ChatInterface = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
+
+  const autoResizeTextarea = (textarea: HTMLTextAreaElement | null) => {
+    if (textarea) {
+        textarea.style.height = 'auto'; 
+        textarea.style.height = `${textarea.scrollHeight}px`;
+    }
+  };
+
+  // Press Enter to send message (except Shift also pressed)
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    if (e.key === 'Enter') {
+        if (!e.shiftKey) {
+            e.preventDefault();
+            sendMessage(e as unknown as FormEvent);
+        }
+    }
+  };
 
   const sendMessage = async (e: FormEvent) => {
     e.preventDefault();
@@ -129,7 +147,7 @@ const ChatInterface = () => {
     const icon = isUser ? <User className="w-4 h-4" /> : <MessageSquare className="w-4 h-4" />;
 
     return (
-      <div className={`flex max-w-3xl mb-4 ${isUser ? 'justify-end' : 'justify-start'}`}>
+      <div className={`flex w-full mb-4 items-start ${isUser ? 'justify-end' : 'justify-start'}`}>
         {!isUser && (
           <div className="flex-shrink-0 mr-3 p-2 bg-indigo-50 rounded-full text-indigo-600 hidden sm:block">
             {icon}
@@ -173,7 +191,7 @@ const ChatInterface = () => {
             <div className="text-center mt-20 p-6 bg-indigo-50 rounded-xl border border-indigo-200">
                 <MessageSquare className="w-10 h-10 mx-auto text-indigo-500 mb-3" />
                 <p className="text-lg font-semibold text-indigo-800">
-                    {activeConversation?.title || 'Nouvelle Discussion'}
+                    {activeConversation?.title || 'New Chat'}
                 </p>
                 <p className="text-sm text-indigo-600 mt-1">
                     Ask me a question...
@@ -204,10 +222,11 @@ const ChatInterface = () => {
           </div>
         )}
         <form onSubmit={sendMessage} className="flex space-x-3">
-          <input
-            type="text"
+          <textarea
+          onKeyDown={handleKeyDown}
+          ref={textareaRef}
             value={input}
-            onChange={(e) => setInput(e.target.value)}
+            onChange={(e) => {setInput(e.target.value); autoResizeTextarea(e.target);}}
             disabled={isLoading || !activeConversation}
             placeholder={
               !activeConversation
@@ -216,7 +235,8 @@ const ChatInterface = () => {
                 ? "Waiting for the answer..." 
                 : "Your text..."
             }
-            className="flex-1 p-3 border border-gray-300 rounded-xl focus:ring-indigo-500 focus:border-indigo-500 transition duration-150 disabled:bg-gray-50 disabled:cursor-not-allowed"
+            rows={1}
+            className="flex-1 p-3 input-area resize-none max-h-24 overflow-y-auto"
           />
           <button
             type="submit"
