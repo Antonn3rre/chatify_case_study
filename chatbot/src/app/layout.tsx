@@ -33,7 +33,7 @@ export default function RootLayout({
         <AuthProvider>
           <ChatProvider>
             
-            <div className="h-full w-screen flex">
+            <div className="h-screen w-screen flex">
               
               {/* SIDEBAR */}
               <Sidebar 
@@ -42,11 +42,13 @@ export default function RootLayout({
               />
               
               {/* MAIN DIV */}
-              <main className="flex-1 flex flex-col">
+              <main className="flex-1 flex flex-col overflow-hidden">
                 {isLoginPage ? ( <LoginHeader /> ) : 
                   (<MobileHeader setIsSidebarOpen={setIsSidebarOpen} />)}
                 
-                {children}
+                <div className="flex-1 overflow-hidden">
+                   {children}
+                </div>
               </main>
 
               {/* Overlay Mobile (Hide screen when sidebar is open) */}

@@ -157,7 +157,7 @@ const ChatInterface = () => {
     const icon = isUser ? <User className="w-4 h-4" /> : <MessageSquare className="w-4 h-4" />;
 
     return (
-      <div className={`flex w-full mb-4 items-start ${isUser ? 'justify-end' : 'justify-start'}`}>
+      <div className={`flex w-full h-full mb-4 items-start ${isUser ? 'justify-end' : 'justify-start'}`}>
         {!isUser && (
           <div className="flex-shrink-0 mr-3 p-2 bg-indigo-50 rounded-full text-indigo-600 hidden sm:block">
             {icon}

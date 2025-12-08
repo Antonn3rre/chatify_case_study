@@ -39,6 +39,10 @@ const Sidebar = ({ isMobileOpen, setIsMobileOpen }: { isMobileOpen: boolean, set
         setIsMobileOpen(false); 
     };
 
+    if (pathname === '/login') {
+        return null;
+    }
+
     const sidebarClasses = `
         w-64 bg-white border-r h-full flex-col flex-shrink-0
         
