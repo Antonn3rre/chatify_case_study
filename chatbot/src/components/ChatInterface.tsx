@@ -102,14 +102,22 @@ const ChatInterface = () => {
 
         const chunkText = new TextDecoder().decode(value, { stream: true }); 
         
-        totalTokens++;
-        fullResponse += chunkText; 
+        // Loop char by char
+        for (let char of chunkText) {
+          fullResponse += char; 
 
-        // Update local state for streaming UI
-        const streamingHistory = [...historyWithUserMsg, { role: 'model', content: fullResponse } as ChatMessage];
-        await updateConversationHistory(streamingHistory);
-        
+          // Update local state for streaming UI
+          const streamingHistory = [...historyWithUserMsg, { role: 'model', content: fullResponse } as ChatMessage];
+          updateConversationHistory(streamingHistory); 
+
+          // Delay between each char
+          await new Promise((resolve) => setTimeout(resolve, 5));
+        }
+
         // Calculate and display tokens/s
+        const wordCount = chunkText.trim().split(/\s+/).filter(word => word.length > 0).length;
+        totalTokens += Math.max(1, wordCount);
+
         const currentTime = Date.now();
         const elapsedTime = (currentTime - startTime) / 1000;
         const tps = totalTokens / elapsedTime;
@@ -155,7 +163,7 @@ const ChatInterface = () => {
         )}
         <div className={`p-4 rounded-xl max-w-[80%] break-words whitespace-pre-wrap transition-all duration-300 ${bubbleClass}`}>
           <div className="font-semibold mb-1 text-sm opacity-80">
-            {isUser ? 'Vous' : 'Chatbot'}
+            {isUser ? 'You' : 'Chatbot'}
           </div>
           <p>{message.content}</p>
         </div>
