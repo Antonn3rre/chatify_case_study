@@ -167,7 +167,7 @@ const Sidebar = ({ isMobileOpen, setIsMobileOpen }: { isMobileOpen: boolean, set
 
             {/* Footer */}
             <div className="p-4 border-t text-sm text-gray-500 flex-shrink-0">
-                <p>© {new Date().getFullYear()} Chatify Case Study</p>
+                <p>© {new Date().getFullYear()} Little Chatbot Project</p>
             </div>
         </aside>
     );

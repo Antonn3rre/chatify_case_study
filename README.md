@@ -13,7 +13,7 @@ Gemini (via @google/genai): gestion des sessions facilitée, streaming de la ré
 /context: gère état global pour faciliter l'accès aux données dans l’app
 /lib : configuration externe (ici pour client supabase)
 
-**Reste à faire:**
+**Ameliorations futures:**
 
 - Encart texte chat: enlever le scroll direct, mieux gérer la hauteur et le centrage quand plusieurs lignes
 - Réponse LLM : Éviter que le bloc de fond ne fasse que suivre les messages (s’agrandit trop brusquement) → Enlever les blocs ?
